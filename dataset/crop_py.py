@@ -51,7 +51,7 @@ def crop_facial_features(image_path, output_size=(64, 64)):
         "mouth": mouth_crop
     }
 
-# Example usage
+# 사용 예시
 # features = crop_facial_features("path/to/your/image.jpg")
 # if features:
 #     for feature_name, feature_img in features.items():

@@ -1,8 +1,12 @@
+# 라이브러리 임포트
 import torch
 import torch.nn as nn
 from torchvision.models import xception
 from timm.models.swin_transformer import SwinTransformer
 
+# Our own model
+# Feature Extractor: XceptionNet
+# Feature Concat + Image Classification: Swim Transformer
 class DeepfakeDetectionModel(nn.Module):
     def __init__(self, num_crops=3):
         super(DeepfakeDetectionModel, self).__init__()
@@ -55,7 +59,7 @@ class DeepfakeDetectionModel(nn.Module):
         
         return output
 
-# Example usage
+# 사용 예시
 # model = DeepfakeDetectionModel()
 # dummy_input = [torch.randn(1, 3, 224, 224) for _ in range(3)]  # 3 crops
 # output = model(dummy_input)
