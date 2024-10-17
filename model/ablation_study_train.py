@@ -69,30 +69,37 @@ class DeepFakeDetectionModel(nn.Module):
     def __init__(self, study_type):
         super(DeepFakeDetectionModel, self).__init__()
         self.study_type = study_type
-        self.face_extractor = XceptionFeatureExtractor()
-        self.secondary_extractor = XceptionFeatureExtractor()
         
-        if study_type == 'face_nose':
-            input_dim = 4096  # 2048 (face) + 2048 (nose)
-        elif study_type == 'face_central':
-            input_dim = 4096  # 2048 (face) + 2048 (central)
-        else:  # face_cheeks_nose
-            input_dim = 8192  # 2048 (face) + 2048 (left_cheek) + 2048 (nose) + 2048 (right_cheek)
-        
-        self.classifier = SwinTransformerClassifier(input_dim)
-
-    def forward(self, face, secondary):
-        face_features = self.face_extractor(face)
-        secondary_features = self.secondary_extractor(secondary)
-        
-        if self.study_type == 'face_cheeks_nose':
-            combined_features = torch.cat((face_features, secondary_features[:, :2048], 
-                                           secondary_features[:, 2048:4096], 
-                                           secondary_features[:, 4096:]), dim=1)
+        if study_type == 'face':
+            self.classifier = SwinTransformerClassifier(2048)  # Only Swin Transformer without feature extraction
         else:
-            combined_features = torch.cat((face_features, secondary_features), dim=1)
-        
-        return self.classifier(combined_features)
+            self.face_extractor = XceptionFeatureExtractor()
+            self.secondary_extractor = XceptionFeatureExtractor()
+            
+            if study_type == 'face_nose':
+                input_dim = 4096  # 2048 (face) + 2048 (nose)
+            elif study_type == 'face_central':
+                input_dim = 4096  # 2048 (face) + 2048 (central)
+            else:  # face_cheeks_nose
+                input_dim = 8192  # 2048 (face) + 2048 (left_cheek) + 2048 (nose) + 2048 (right_cheek)
+            
+            self.classifier = SwinTransformerClassifier(input_dim)
+
+    def forward(self, face, secondary=None):
+        if self.study_type == 'face':
+            return self.classifier(face)
+        else:
+            face_features = self.face_extractor(face)
+            secondary_features = self.secondary_extractor(secondary)
+            
+            if self.study_type == 'face_cheeks_nose':
+                combined_features = torch.cat((face_features, secondary_features[:, :2048], 
+                                               secondary_features[:, 2048:4096], 
+                                               secondary_features[:, 4096:]), dim=1)
+            else:
+                combined_features = torch.cat((face_features, secondary_features), dim=1)
+            
+            return self.classifier(combined_features)
 
 # Data loading and preprocessing
 transform = transforms.Compose([
@@ -116,15 +123,16 @@ def train_model(model, train_loader, val_loader, criterion, optimizer, num_epoch
 
         for batch in tqdm(train_loader, desc=f"Epoch {epoch+1}/{start_epoch + num_epochs} [Training]"):
             face = batch['face'].to(device)
+            labels = batch['label'].to(device)
 
-            if study_type == 'face_nose':
+            if study_type == 'face':
+                secondary = None
+            elif study_type == 'face_nose':
                 secondary = batch['nose'].to(device)
             elif study_type == 'face_central':
                 secondary = batch['central'].to(device)
             else:  # face_cheeks_nose
                 secondary = torch.cat((batch['left_cheek'], batch['nose'], batch['right_cheek']), dim=1).to(device)
-
-            labels = batch['label'].to(device)
 
             optimizer.zero_grad()
             outputs = model(face, secondary)
@@ -148,15 +156,17 @@ def train_model(model, train_loader, val_loader, criterion, optimizer, num_epoch
         with torch.no_grad():
             for batch in tqdm(val_loader, desc=f"Epoch {epoch+1}/{start_epoch + num_epochs} [Validation]"):
                 face = batch['face'].to(device)
+                labels = batch['label'].to(device)
 
-                if study_type == 'face_nose':
+                if study_type == 'face':
+                    secondary = None
+                elif study_type == 'face_nose':
                     secondary = batch['nose'].to(device)
                 elif study_type == 'face_central':
                     secondary = batch['central'].to(device)
                 else:  # face_cheeks_nose
                     secondary = torch.cat((batch['left_cheek'], batch['nose'], batch['right_cheek']), dim=1).to(device)
 
-                labels = batch['label'].to(device)
                 outputs = model(face, secondary)
                 _, predicted = outputs.max(1)
                 val_total += labels.size(0)
@@ -192,8 +202,8 @@ def load_checkpoint(model, optimizer, filename='best_checkpoint.pth'):
 # Main execution with argparse
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='DeepFake Detection Training')
-    parser.add_argument('--csv', type=str, required=True, help='Path to the CSV file containing metadata')
-    parser.add_argument('--study_type', type=str, choices=['face_nose', 'face_central', 'face_cheeks_nose'], required=True, help='Ablation study type to use')
+    parser.add_argument('--csv', type=str, default='-', help='Path to the CSV file containing metadata')
+    parser.add_argument('--study_type', type=str, choices=['face', 'face_nose', 'face_central', 'face_cheeks_nose'], required=True, help='Ablation study type to use')
     parser.add_argument('--resume', type=bool, default=False, help='Resume training from the best checkpoint')
     parser.add_argument('--epochs', type=int, default=10, help='Number of epochs to train')
     args = parser.parse_args()

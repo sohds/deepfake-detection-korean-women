@@ -32,7 +32,9 @@ def test_model(model, test_loader, study_type='face_nose'):
         for batch in tqdm(test_loader, desc="Testing [Test Set]"):
             face = batch['face'].to(device)
 
-            if study_type == 'face_nose':
+            if study_type == 'face':
+                secondary = None
+            elif study_type == 'face_nose':
                 secondary = batch['nose'].to(device)
             elif study_type == 'face_central':
                 secondary = batch['central'].to(device)
@@ -40,7 +42,11 @@ def test_model(model, test_loader, study_type='face_nose'):
                 secondary = torch.cat((batch['left_cheek'], batch['nose'], batch['right_cheek']), dim=1).to(device)
 
             labels = batch['label'].to(device)
-            outputs = model(face, secondary)
+            if study_type == 'face':
+                outputs = model(face)
+            else:
+                outputs = model(face, secondary)
+
             probs = torch.softmax(outputs, dim=1)[:, 1]  # Probability of class 1 (deepfake)
             _, predicted = outputs.max(1)
 
@@ -82,7 +88,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='DeepFake Detection Testing')
     parser.add_argument('--csv', type=str, default='-', help='Path to the CSV file containing metadata for testing')
     parser.add_argument('--checkpoint', type=str, required=True, help='Path to the trained model checkpoint')
-    parser.add_argument('--study_type', type=str, choices=['face_nose', 'face_central', 'face_cheeks_nose'], required=True, help='Ablation study type to use')
+    parser.add_argument('--study_type', type=str, choices=['face', 'face_nose', 'face_central', 'face_cheeks_nose'], required=True, help='Ablation study type to use')
     args = parser.parse_args()
 
     # Load dataset
