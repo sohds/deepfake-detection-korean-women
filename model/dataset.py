@@ -1,14 +1,14 @@
-from PIL import Image
+import pandas as pd
 import torch
 from torch.utils.data import Dataset
+from PIL import Image
 import os
-import pandas as pd
 
-# Custom Dataset class for DeepFake dataset
 class DeepFakeDataset(Dataset):
-    def __init__(self, dataframe, transform=None):
+    def __init__(self, dataframe, transform=None, study_type='face'):
         self.data = dataframe
         self.transform = transform
+        self.study_type = study_type
 
     def __len__(self):
         return len(self.data)
@@ -16,31 +16,34 @@ class DeepFakeDataset(Dataset):
     def __getitem__(self, idx):
         row = self.data.iloc[idx]
         
-        def safe_open_image(path):
-            if pd.isna(path) or not os.path.exists(path):
-                return None
-            return Image.open(path)
+        def safe_open_image(path, key):
+            try:
+                if pd.isna(path) or not os.path.exists(path):
+                    print(f"Warning: {key} image not found at {path}")
+                    return torch.zeros((3, 299, 299))
+                img = Image.open(path).convert('RGB')
+                if self.transform:
+                    img = self.transform(img)
+                return img
+            except Exception as e:
+                print(f"Error loading {key} image at {path}: {str(e)}")
+                return torch.zeros((3, 299, 299))
 
-        face = safe_open_image(row['face'])
-        nose = safe_open_image(row['nose'])
-        central = safe_open_image(row['central'])
-        left_cheek = safe_open_image(row['left_cheek'])
-        right_cheek = safe_open_image(row['right_cheek'])
-
-        if self.transform:
-            face = self.transform(face) if face else None
-            nose = self.transform(nose) if nose else None
-            central = self.transform(central) if central else None
-            left_cheek = self.transform(left_cheek) if left_cheek else None
-            right_cheek = self.transform(right_cheek) if right_cheek else None
-
-        label = torch.tensor(1 if row['deepfake'] else 0, dtype=torch.long)
+        result = {}
         
-        return {
-            'face': face,
-            'nose': nose,
-            'central': central,
-            'left_cheek': left_cheek,
-            'right_cheek': right_cheek,
-            'label': label
-        }
+        if self.study_type == 'face' or self.study_type == 'face_nose' or self.study_type == 'face_central' or self.study_type == 'face_cheeks_nose':
+            result['face'] = safe_open_image(row['face'], 'face')
+        
+        if self.study_type == 'face_nose' or self.study_type == 'face_cheeks_nose':
+            result['nose'] = safe_open_image(row['nose'], 'nose')
+        
+        if self.study_type == 'face_central':
+            result['central'] = safe_open_image(row['central'], 'central')
+        
+        if self.study_type == 'face_cheeks_nose':
+            result['left_cheek'] = safe_open_image(row['left_cheek'], 'left_cheek')
+            result['right_cheek'] = safe_open_image(row['right_cheek'], 'right_cheek')
+
+        result['label'] = torch.tensor(1 if row['deepfake'] else 0, dtype=torch.long)
+        
+        return result
