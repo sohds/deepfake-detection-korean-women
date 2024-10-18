@@ -36,17 +36,22 @@ def train_model(model, train_loader, val_loader, criterion, optimizer, num_epoch
             labels = batch['label'].to(device)
 
             if study_type == 'face':
-                secondary = None
+                outputs = model(face)
             elif study_type == 'face_nose':
-                secondary = batch['nose'].to(device)
+                nose = batch['nose'].to(device)
+                outputs = model(face, nose)
             elif study_type == 'face_central':
-                secondary = batch['central'].to(device)
-            else:  # face_cheeks_nose
-                secondary = torch.cat((batch['left_cheek'], batch['nose'], batch['right_cheek']), dim=1).to(device)
+                central = batch['central'].to(device)
+                outputs = model(face, central)
+            elif study_type == 'face_cheeks_nose':
+                nose = batch['nose'].to(device)
+                left_cheek = batch['left_cheek'].to(device)
+                right_cheek = batch['right_cheek'].to(device)
+                secondary = torch.cat((left_cheek, nose, right_cheek), dim=1)
+                outputs = model(face, secondary)
 
-            optimizer.zero_grad()
-            outputs = model(face, secondary)
             loss = criterion(outputs, labels)
+            optimizer.zero_grad()
             loss.backward()
             optimizer.step()
 
@@ -123,15 +128,19 @@ if __name__ == "__main__":
     # Load dataset and split into train, validation, and test sets
     df = pd.read_csv(args.csv)
     train_df, test_df = train_test_split(df, test_size=0.2, random_state=42)
+    print('Dataset Loaded.')
     train_df, val_df = train_test_split(train_df, test_size=0.2, random_state=42)
 
     # Create datasets
-    train_dataset = DeepFakeDataset(train_df, transform=transform)
-    val_dataset = DeepFakeDataset(val_df, transform=transform)
+    train_dataset = DeepFakeDataset(train_df, transform=transform, study_type=args.study_type)
+    val_dataset = DeepFakeDataset(val_df, transform=transform, study_type=args.study_type)
+    print('Datasets Created.')
 
     # Create DataLoaders
     train_loader = DataLoader(train_dataset, batch_size=32, shuffle=True, num_workers=4)
+    print('Train Loader Created.')
     val_loader = DataLoader(val_dataset, batch_size=32, shuffle=False, num_workers=4)
+    print('Validation Loader Created.')
 
     # num_classes, Model, Loss, Optimizer
     num_classes = 2
@@ -149,5 +158,6 @@ if __name__ == "__main__":
         else:
             print(f"No checkpoint found at {args.checkpoint}, starting from scratch.")
 
+    print('Training Started.')
     # Train the model
     train_model(model, train_loader, val_loader, criterion, optimizer, num_epochs=args.epochs, start_epoch=start_epoch, study_type=args.study_type)

@@ -95,10 +95,12 @@ if __name__ == "__main__":
     # Load dataset
     df = pd.read_csv(args.csv)
     _, test_df = train_test_split(df, test_size=0.2, random_state=42)
-    test_dataset = DeepFakeDataset(test_df, transform=transform)
+    test_dataset = DeepFakeDataset(test_df, transform=transform, study_type=args.study_type)
+    print('Test Dataset Loaded.')
     
     # Create DataLoader
     test_loader = DataLoader(test_dataset, batch_size=32, shuffle=False, num_workers=4)
+    print('Test DataLoader Created.')
 
     # Load model
     num_classes = 2
@@ -106,6 +108,8 @@ if __name__ == "__main__":
     checkpoint = torch.load(args.checkpoint)
     model.load_state_dict(checkpoint['model_state_dict'])
     epoch = checkpoint['epoch']
-
+    print(f"Loaded model from epoch {epoch}")
+    
+    print(f"Start testing model with study type: {args.study_type}")
     # Test the model
     test_model(model, test_loader, study_type=args.study_type)
