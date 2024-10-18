@@ -9,6 +9,7 @@ import matplotlib.pyplot as plt
 from tqdm import tqdm
 from model import DeepFakeDetectionModel
 from dataset import DeepFakeDataset
+from sklearn.model_selection import train_test_split
 
 # Data loading and preprocessing
 transform = transforms.Compose([
@@ -79,7 +80,7 @@ def test_model(model, test_loader, study_type='face_nose'):
     plt.ylabel('True Positive Rate')
     plt.title('Receiver Operating Characteristic (ROC) Curve')
     plt.legend(loc='lower right')
-    plt.savefig(f'/content/drive/MyDrive/Capstone-Design/multiscaleDetect/rocCurve/{args.study_type}_{epoch}epoch_roc_curve.png')
+    plt.savefig(f'{args.output_dir}/{args.study_type}_{epoch}epoch_roc_curve.png')
     plt.close()
 
 # Main execution with argparse
@@ -88,17 +89,20 @@ if __name__ == "__main__":
     parser.add_argument('--csv', '-f', type=str, default='/content/drive/MyDrive/Capstone-Design/multiscaleDetect/meta_data.csv', required=True, help='Path to the CSV file containing metadata for testing')
     parser.add_argument('--checkpoint', '-c', type=str, required=True, help='Path to the trained model checkpoint')
     parser.add_argument('--study_type', '-t', type=str, choices=['face', 'face_nose', 'face_central', 'face_cheeks_nose'], required=True, help='Ablation study type to use')
+    parser.add_argument('--output_dir', '-o', type=str, default='/content/drive/MyDrive/Capstone-Design/multiscaleDetect/rocCurve', help='Directory to save output files')
     args = parser.parse_args()
 
     # Load dataset
     df = pd.read_csv(args.csv)
-    test_dataset = DeepFakeDataset(df, transform=transform)
-
+    _, test_df = train_test_split(df, test_size=0.2, random_state=42)
+    test_dataset = DeepFakeDataset(test_df, transform=transform)
+    
     # Create DataLoader
     test_loader = DataLoader(test_dataset, batch_size=32, shuffle=False, num_workers=4)
 
     # Load model
-    model = DeepFakeDetectionModel(args.study_type)
+    num_classes = 2
+    model = DeepFakeDetectionModel(args.study_type, num_classes = num_classes)
     checkpoint = torch.load(args.checkpoint)
     model.load_state_dict(checkpoint['model_state_dict'])
     epoch = checkpoint['epoch']

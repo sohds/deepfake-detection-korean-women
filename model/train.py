@@ -9,7 +9,7 @@ from tqdm import tqdm
 from sklearn.model_selection import train_test_split
 from dataset import DeepFakeDataset
 from model import DeepFakeDetectionModel
-
+import os
 
 # Data loading and preprocessing
 transform = transforms.Compose([
@@ -94,7 +94,7 @@ def train_model(model, train_loader, val_loader, criterion, optimizer, num_epoch
                 'optimizer_state_dict': optimizer.state_dict(),
                 'best_acc': best_acc
             }
-            torch.save(checkpoint, f'/content/drive/MyDrive/Capstone-Design/multiscaleDetect/checkpoints/{study_type}_best_checkpoint_{epoch+1}epoch.pth')
+            torch.save(checkpoint, os.path.join(args.output_dir, f'{study_type}_best_checkpoint_{epoch+1}.pth'))
             print(f"New best model saved with accuracy: {best_acc:.4f}, Epoch: {epoch+1}")
 
     print(f"Training complete. Best accuracy: {best_acc:.4f}")
@@ -117,6 +117,7 @@ if __name__ == "__main__":
     parser.add_argument('--resume', '-r', type=bool, default=False, help='Resume training from the best checkpoint')
     parser.add_argument('--checkpoint', '-c', type=str, default='', help='checkpoint file to resume training')
     parser.add_argument('--epochs', '-e', type=int, default=10, help='Number of epochs to train')
+    parser.add_argument('--output_dir', '-o', type=str, default='/content/drive/MyDrive/Capstone-Design/multiscaleDetect/checkpoints', help='Output directory to save ROC curve plots')
     args = parser.parse_args()
 
     # Load dataset and split into train, validation, and test sets
@@ -132,15 +133,21 @@ if __name__ == "__main__":
     train_loader = DataLoader(train_dataset, batch_size=32, shuffle=True, num_workers=4)
     val_loader = DataLoader(val_dataset, batch_size=32, shuffle=False, num_workers=4)
 
-    # Model, Loss, Optimizer
-    model = DeepFakeDetectionModel(args.study_type)
+    # num_classes, Model, Loss, Optimizer
+    num_classes = 2
+    model = DeepFakeDetectionModel(args.study_type, num_classes=num_classes)
     criterion = nn.CrossEntropyLoss()
     optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
 
     # Resume training if specified
     start_epoch = 0
     if args.resume:
-        model, optimizer, start_epoch = load_checkpoint(model, optimizer, filename=args.checkpoint)
+        if not args.checkpoint:
+            print('Please provide a checkpoint file to resume training.')
+        if os.path.isfile(args.checkpoint):
+            model, optimizer, start_epoch = load_checkpoint(model, optimizer, args.checkpoint)
+        else:
+            print(f"No checkpoint found at {args.checkpoint}, starting from scratch.")
 
     # Train the model
     train_model(model, train_loader, val_loader, criterion, optimizer, num_epochs=args.epochs, start_epoch=start_epoch, study_type=args.study_type)

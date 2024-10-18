@@ -24,12 +24,12 @@ class SwinTransformerClassifier(nn.Module):
 
 # Full Model for each ablation study
 class DeepFakeDetectionModel(nn.Module):
-    def __init__(self, study_type):
+    def __init__(self, study_type, num_classes=2):
         super(DeepFakeDetectionModel, self).__init__()
         self.study_type = study_type
         
         if study_type == 'face':
-            self.classifier = SwinTransformerClassifier(2048)  
+            self.classifier = SwinTransformerClassifier(2048, num_classes=2)  
             # Only Swin Transformer without feature extraction
         else:
             self.face_extractor = XceptionFeatureExtractor()
@@ -42,7 +42,7 @@ class DeepFakeDetectionModel(nn.Module):
             else:  # face_cheeks_nose
                 input_dim = 8192  # 2048 (face) + 2048 (left_cheek) + 2048 (nose) + 2048 (right_cheek)
             
-            self.classifier = SwinTransformerClassifier(input_dim)
+            self.classifier = SwinTransformerClassifier(input_dim, num_classes=2)
 
     def forward(self, face, secondary=None):
         if self.study_type == 'face':
