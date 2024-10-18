@@ -1,105 +1,15 @@
 import torch
 import torch.nn as nn
-from torch.utils.data import Dataset, DataLoader
+from torch.utils.data import DataLoader
 from torchvision import transforms
-from PIL import Image
+
 import pandas as pd
-from timm import create_model
 import argparse
 from tqdm import tqdm
 from sklearn.model_selection import train_test_split
+from dataset import DeepFakeDataset
+from model import DeepFakeDetectionModel
 
-# Custom Dataset
-class DeepFakeDataset(Dataset):
-    def __init__(self, dataframe, transform=None):
-        self.data = dataframe
-        self.transform = transform
-
-    def __len__(self):
-        return len(self.data)
-
-    def __getitem__(self, idx):
-        row = self.data.iloc[idx]
-        face = Image.open(row['face'])
-        nose = Image.open(row['nose'])
-        central = Image.open(row['central'])
-        left_cheek = Image.open(row['left_cheek'])
-        right_cheek = Image.open(row['right_cheek'])
-
-        if self.transform:
-            face = self.transform(face)
-            nose = self.transform(nose)
-            central = self.transform(central)
-            left_cheek = self.transform(left_cheek)
-            right_cheek = self.transform(right_cheek)
-
-        label = torch.tensor(1 if row['deepfake'] else 0, dtype=torch.long)
-        
-        return {
-            'face': face,
-            'nose': nose,
-            'central': central,
-            'left_cheek': left_cheek,
-            'right_cheek': right_cheek,
-            'label': label
-        }
-
-# Feature Extractor using XceptionNet
-class XceptionFeatureExtractor(nn.Module):
-    def __init__(self):
-        super(XceptionFeatureExtractor, self).__init__()
-        self.xception = create_model('xception', pretrained=True)
-        self.xception.fc = nn.Identity()  # Remove the final fully connected layer
-
-    def forward(self, x):
-        return self.xception(x)
-
-# Swin Transformer Classifier
-class SwinTransformerClassifier(nn.Module):
-    def __init__(self, input_dim, num_classes=2):
-        super(SwinTransformerClassifier, self).__init__()
-        self.swin = create_model('swin_base_patch4_window7_224', pretrained=True)
-        self.swin.head = nn.Linear(self.swin.head.in_features, num_classes)
-
-    def forward(self, x):
-        return self.swin(x)
-
-# Full Model for each ablation study
-class DeepFakeDetectionModel(nn.Module):
-    def __init__(self, study_type):
-        super(DeepFakeDetectionModel, self).__init__()
-        self.study_type = study_type
-        
-        if study_type == 'face':
-            self.classifier = SwinTransformerClassifier(2048)  # Only Swin Transformer without feature extraction
-        else:
-            self.face_extractor = XceptionFeatureExtractor()
-            self.secondary_extractor = XceptionFeatureExtractor()
-            
-            if study_type == 'face_nose':
-                input_dim = 4096  # 2048 (face) + 2048 (nose)
-            elif study_type == 'face_central':
-                input_dim = 4096  # 2048 (face) + 2048 (central)
-            else:  # face_cheeks_nose
-                input_dim = 8192  # 2048 (face) + 2048 (left_cheek) + 2048 (nose) + 2048 (right_cheek)
-            
-            self.classifier = SwinTransformerClassifier(input_dim)
-
-    def forward(self, face, secondary=None):
-        if self.study_type == 'face':
-            return self.classifier(face)
-        else:
-            face_features = self.face_extractor(face)
-            secondary_features = self.secondary_extractor(secondary)
-            
-            if self.study_type == 'face_cheeks_nose':
-                combined_features = torch.cat((face_features, secondary_features[:, :2048], 
-                                               secondary_features[:, 2048:4096], 
-                                               secondary_features[:, 4096:]), dim=1)
-            else:
-                combined_features = torch.cat((face_features, secondary_features), dim=1)
-            
-            return self.classifier(combined_features)
 
 # Data loading and preprocessing
 transform = transforms.Compose([
@@ -184,13 +94,13 @@ def train_model(model, train_loader, val_loader, criterion, optimizer, num_epoch
                 'optimizer_state_dict': optimizer.state_dict(),
                 'best_acc': best_acc
             }
-            torch.save(checkpoint, f'best_checkpoint_{study_type}.pth')
+            torch.save(checkpoint, f'/content/drive/MyDrive/Capstone-Design/multiscaleDetect/checkpoints/{study_type}_best_checkpoint_{epoch+1}epoch.pth')
             print(f"New best model saved with accuracy: {best_acc:.4f}, Epoch: {epoch+1}")
 
     print(f"Training complete. Best accuracy: {best_acc:.4f}")
 
 # Loading the model from checkpoint for additional training
-def load_checkpoint(model, optimizer, filename='best_checkpoint.pth'):
+def load_checkpoint(model, optimizer, filename):
     checkpoint = torch.load(filename)
     model.load_state_dict(checkpoint['model_state_dict'])
     optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
@@ -201,11 +111,12 @@ def load_checkpoint(model, optimizer, filename='best_checkpoint.pth'):
 
 # Main execution with argparse
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description='DeepFake Detection Training')
-    parser.add_argument('--csv', type=str, default='-', help='Path to the CSV file containing metadata')
-    parser.add_argument('--study_type', type=str, choices=['face', 'face_nose', 'face_central', 'face_cheeks_nose'], required=True, help='Ablation study type to use')
-    parser.add_argument('--resume', type=bool, default=False, help='Resume training from the best checkpoint')
-    parser.add_argument('--epochs', type=int, default=10, help='Number of epochs to train')
+    parser = argparse.ArgumentParser(description='DeepFake Detection Model Training')
+    parser.add_argument('--csv', '-f', type=str, default='/content/drive/MyDrive/Capstone-Design/multiscaleDetect/meta_data.csv', required=True, help='Path CSV Files neeeded for training')
+    parser.add_argument('--study_type', '-t', type=str, choices=['face', 'face_nose', 'face_central', 'face_cheeks_nose'], required=True, help='Ablation study type to use')
+    parser.add_argument('--resume', '-r', type=bool, default=False, help='Resume training from the best checkpoint')
+    parser.add_argument('--checkpoint', '-c', type=str, default='', help='checkpoint file to resume training')
+    parser.add_argument('--epochs', '-e', type=int, default=10, help='Number of epochs to train')
     args = parser.parse_args()
 
     # Load dataset and split into train, validation, and test sets
@@ -229,7 +140,7 @@ if __name__ == "__main__":
     # Resume training if specified
     start_epoch = 0
     if args.resume:
-        model, optimizer, start_epoch = load_checkpoint(model, optimizer, filename=f'best_checkpoint_{args.study_type}.pth')
+        model, optimizer, start_epoch = load_checkpoint(model, optimizer, filename=args.checkpoint)
 
     # Train the model
     train_model(model, train_loader, val_loader, criterion, optimizer, num_epochs=args.epochs, start_epoch=start_epoch, study_type=args.study_type)

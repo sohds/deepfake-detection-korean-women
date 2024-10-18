@@ -1,5 +1,4 @@
 import torch
-import torch.nn as nn
 from torch.utils.data import DataLoader
 from torchvision import transforms
 from sklearn.metrics import roc_curve, auc, accuracy_score, confusion_matrix
@@ -7,9 +6,9 @@ import pandas as pd
 import argparse
 import pickle
 import matplotlib.pyplot as plt
-from timm import create_model
 from tqdm import tqdm
-from ablation_study_train import DeepFakeDetectionModel, DeepFakeDataset  # Assuming the train file is named deepfake_detection_training.py
+from model import DeepFakeDetectionModel
+from dataset import DeepFakeDataset
 
 # Data loading and preprocessing
 transform = transforms.Compose([
@@ -69,7 +68,7 @@ def test_model(model, test_loader, study_type='face_nose'):
     print(f"TPR: {tpr_rate:.4f}")
 
     # Save ROC curve data
-    with open(f'roc_curve_data_{args.study_type}.pkl', 'wb') as f:
+    with open(f'/content/drive/MyDrive/Capstone-Design/multiscaleDetect/aucPickleFiles/{args.study_type}_roc_curve_data.pkl', 'wb') as f:
         pickle.dump({'fpr': fpr, 'tpr': tpr, 'roc_auc': roc_auc}, f)
 
     # Plot ROC curve
@@ -80,15 +79,15 @@ def test_model(model, test_loader, study_type='face_nose'):
     plt.ylabel('True Positive Rate')
     plt.title('Receiver Operating Characteristic (ROC) Curve')
     plt.legend(loc='lower right')
-    plt.savefig('roc_curve.png')
+    plt.savefig(f'/content/drive/MyDrive/Capstone-Design/multiscaleDetect/rocCurve/{args.study_type}_{epoch}epoch_roc_curve.png')
     plt.close()
 
 # Main execution with argparse
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='DeepFake Detection Testing')
-    parser.add_argument('--csv', type=str, default='-', help='Path to the CSV file containing metadata for testing')
-    parser.add_argument('--checkpoint', type=str, required=True, help='Path to the trained model checkpoint')
-    parser.add_argument('--study_type', type=str, choices=['face', 'face_nose', 'face_central', 'face_cheeks_nose'], required=True, help='Ablation study type to use')
+    parser.add_argument('--csv', '-f', type=str, default='/content/drive/MyDrive/Capstone-Design/multiscaleDetect/meta_data.csv', required=True, help='Path to the CSV file containing metadata for testing')
+    parser.add_argument('--checkpoint', '-c', type=str, required=True, help='Path to the trained model checkpoint')
+    parser.add_argument('--study_type', '-t', type=str, choices=['face', 'face_nose', 'face_central', 'face_cheeks_nose'], required=True, help='Ablation study type to use')
     args = parser.parse_args()
 
     # Load dataset
@@ -102,6 +101,7 @@ if __name__ == "__main__":
     model = DeepFakeDetectionModel(args.study_type)
     checkpoint = torch.load(args.checkpoint)
     model.load_state_dict(checkpoint['model_state_dict'])
+    epoch = checkpoint['epoch']
 
     # Test the model
     test_model(model, test_loader, study_type=args.study_type)
