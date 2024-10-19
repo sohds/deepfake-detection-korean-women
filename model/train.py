@@ -87,6 +87,7 @@ def train_model(model, train_loader, val_loader, criterion, optimizer, num_epoch
 
         # Save the best checkpoint with epoch and optimizer state
         if val_acc > best_acc:
+            train_acc = epoch_acc
             best_acc = val_acc
             checkpoint = {
                 'epoch': epoch,
@@ -96,7 +97,21 @@ def train_model(model, train_loader, val_loader, criterion, optimizer, num_epoch
             }
             torch.save(checkpoint, os.path.join(args.output_dir, f'{study_type}_best_checkpoint_{epoch+1}.pth'))
             print(f"New best model saved with accuracy: {best_acc:.4f}, Epoch: {epoch+1}")
-
+        
+        elif val_acc == best_acc:
+            print(f"Model performance did not improve from the previous best accuracy: {best_acc:.4f}")
+            print("Checking training accuracy for comparison.")
+            if epoch_acc > train_acc:
+                train_acc = epoch_acc
+                checkpoint = {
+                    'epoch': epoch,
+                    'model_state_dict': model.state_dict(),
+                    'optimizer_state_dict': optimizer.state_dict(),
+                    'best_acc': best_acc
+                }
+                torch.save(checkpoint, os.path.join(args.output_dir, f'{study_type}_best_checkpoint_{epoch+1}.pth'))
+                print(f"New best model saved with accuracy: {best_acc:.4f}, Epoch: {epoch+1}")
+            
     print(f"Training complete. Best accuracy: {best_acc:.4f}")
 
 # Loading the model from checkpoint for additional training
