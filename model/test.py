@@ -11,13 +11,6 @@ from model import DeepFakeDetectionModel
 from dataset import DeepFakeDataset
 from sklearn.model_selection import train_test_split
 
-# Data loading and preprocessing
-transform = transforms.Compose([
-    transforms.Resize((299, 299)),  # Xception input size
-    transforms.ToTensor(),
-    transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
-])
-
 # Testing function
 def test_model(model, test_loader, study_type='face_nose'):
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -95,11 +88,16 @@ if __name__ == "__main__":
     # Load dataset
     df = pd.read_csv(args.csv)
     _, test_df = train_test_split(df, test_size=0.2, random_state=42)
-    test_dataset = DeepFakeDataset(test_df, transform=transform, study_type=args.study_type)
+    test_dataset = DeepFakeDataset(test_df, study_type=args.study_type)
     print('Test Dataset Loaded.')
     
+    def collate_fn(batch):
+        batch = list(filter(lambda x: x is not None, batch))
+        return torch.utils.data.dataloader.default_collate(batch)
+
     # Create DataLoader
-    test_loader = DataLoader(test_dataset, batch_size=32, shuffle=False, num_workers=4)
+    batch_size = 32 if args.study_type == 'face' else 16  # Adjust as needed
+    test_loader = DataLoader(test_dataset, batch_size=32, shuffle=False, num_workers=4, collate_fn=collate_fn)
     print('Test DataLoader Created.')
 
     # Load model

@@ -11,12 +11,6 @@ from dataset import DeepFakeDataset
 from model import DeepFakeDetectionModel
 import os
 
-# Data loading and preprocessing
-transform = transforms.Compose([
-    transforms.Resize((299, 299)),  # Xception input size
-    transforms.ToTensor(),
-    transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
-])
 
 # Training function with best checkpoint saving (including epoch and optimizer state)
 def train_model(model, train_loader, val_loader, criterion, optimizer, num_epochs=10, start_epoch=0, study_type='face_nose'):
@@ -50,6 +44,7 @@ def train_model(model, train_loader, val_loader, criterion, optimizer, num_epoch
                 secondary = torch.cat((left_cheek, nose, right_cheek), dim=1)
                 outputs = model(face, secondary)
 
+            # print(f"Outputs shape: {outputs.shape}, Labels shape: {labels.shape}")  # Debugging line
             loss = criterion(outputs, labels)
             optimizer.zero_grad()
             loss.backward()
@@ -132,15 +127,22 @@ if __name__ == "__main__":
     train_df, val_df = train_test_split(train_df, test_size=0.2, random_state=42)
 
     # Create datasets
-    train_dataset = DeepFakeDataset(train_df, transform=transform, study_type=args.study_type)
-    val_dataset = DeepFakeDataset(val_df, transform=transform, study_type=args.study_type)
+    train_dataset = DeepFakeDataset(train_df, study_type=args.study_type)
+    val_dataset = DeepFakeDataset(val_df, study_type=args.study_type)
     print('Datasets Created.')
 
+    batch_size = 32 if args.study_type == 'face' else 16  # Adjust as needed
+
+    def collate_fn(batch):
+        batch = list(filter(lambda x: x is not None, batch))
+        return torch.utils.data.dataloader.default_collate(batch)
+
     # Create DataLoaders
-    train_loader = DataLoader(train_dataset, batch_size=32, shuffle=True, num_workers=4)
+    train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True, num_workers=4, collate_fn=collate_fn)
     print('Train Loader Created.')
-    val_loader = DataLoader(val_dataset, batch_size=32, shuffle=False, num_workers=4)
+    val_loader = DataLoader(val_dataset, batch_size=batch_size, shuffle=False, num_workers=4, collate_fn=collate_fn)
     print('Validation Loader Created.')
+
 
     # num_classes, Model, Loss, Optimizer
     num_classes = 2
@@ -158,6 +160,6 @@ if __name__ == "__main__":
         else:
             print(f"No checkpoint found at {args.checkpoint}, starting from scratch.")
 
-    print('Training Started.')
+    print('\nTraining Started.\n')
     # Train the model
     train_model(model, train_loader, val_loader, criterion, optimizer, num_epochs=args.epochs, start_epoch=start_epoch, study_type=args.study_type)
