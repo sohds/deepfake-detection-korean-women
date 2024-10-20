@@ -94,7 +94,7 @@ if __name__ == "__main__":
     # Load dataset
     df = pd.read_csv(args.csv)
     _, test_df = train_test_split(df, test_size=0.2, random_state=42)
-    test_dataset = DeepFakeDataset(test_df, study_type=args.study_type)
+    test_dataset = DeepFakeDataset(test_df, study_type=args.study_type, augment=False)
     print('Test Dataset Loaded.')
     
     def collate_fn(batch):

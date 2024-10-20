@@ -142,8 +142,8 @@ if __name__ == "__main__":
     train_df, val_df = train_test_split(train_df, test_size=0.2, random_state=42)
 
     # Create datasets
-    train_dataset = DeepFakeDataset(train_df, study_type=args.study_type)
-    val_dataset = DeepFakeDataset(val_df, study_type=args.study_type)
+    train_dataset = DeepFakeDataset(train_df, study_type=args.study_type, augment=True)
+    val_dataset = DeepFakeDataset(val_df, study_type=args.study_type, augment=False)
     print('Datasets Created.')
 
     batch_size = 32 if args.study_type == 'face' else 16  # Adjust as needed
