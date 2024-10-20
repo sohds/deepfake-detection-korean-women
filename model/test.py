@@ -1,7 +1,7 @@
 import torch
 from torch.utils.data import DataLoader
 from torchvision import transforms
-from sklearn.metrics import roc_curve, auc, accuracy_score, confusion_matrix
+from sklearn.metrics import roc_curve, auc, accuracy_score, confusion_matrix, precision_score, recall_score, f1_score
 import pandas as pd
 import argparse
 import pickle
@@ -54,12 +54,18 @@ def test_model(model, test_loader, study_type='face_nose'):
     tn, fp, fn, tp = confusion_matrix(all_labels, all_preds).ravel()
     fpr_rate = fp / (fp + tn)
     tpr_rate = tp / (tp + fn)
+    precision = precision_score(all_labels, all_preds)
+    recall = recall_score(all_labels, all_preds)
+    f1 = f1_score(all_labels, all_preds)
 
     # Print metrics
     print(f"Accuracy: {accuracy:.4f}")
     print(f"AUC: {roc_auc:.4f}")
     print(f"FPR: {fpr_rate:.4f}")
     print(f"TPR: {tpr_rate:.4f}")
+    print(f"Precision: {precision:.4f}")
+    print(f"Recall: {recall:.4f}")
+    print(f"F1 Score: {f1:.4f}")
 
     # Save ROC curve data
     with open(f'/content/drive/MyDrive/Capstone-Design/multiscaleDetect/aucPickleFiles/{args.study_type}_roc_curve_data.pkl', 'wb') as f:
