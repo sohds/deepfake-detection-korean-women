@@ -37,48 +37,48 @@ class DeepFakeDataset(Dataset):
     def __len__(self):
         return len(self.data)
 
+    def safe_open_image(self, path, key, transform):
+        try:
+            if pd.isna(path) or not os.path.exists(path):
+                print(f"Warning: {key} image not found at {path}")
+                return torch.zeros((3, 224, 224) if transform == self.swin_transform else (3, 299, 299))
+            
+            img = Image.open(path).convert('RGB')
+            
+            if self.augment:
+                # Apply augmentation
+                img = self.augment_transform(img)
+                img = transform(img)
+                img = self.add_gaussian_noise(img)
+            else:
+                # Apply only basic transformation
+                img = transform(img)
+            
+            return img
+        except Exception as e:
+            print(f"Error loading {key} image at {path}: {str(e)}")
+            return torch.zeros((3, 224, 224) if transform == self.swin_transform else (3, 299, 299))
+
+    def add_gaussian_noise(self, img):
+        noise = torch.randn_like(img) * 0.02
+        return torch.clamp(img + noise, 0, 1)
+
     def __getitem__(self, idx):
         row = self.data.iloc[idx]
         
-        def safe_open_image(self, path, key, transform):
-            try:
-                if pd.isna(path) or not os.path.exists(path):
-                    print(f"Warning: {key} image not found at {path}")
-                    return torch.zeros((3, 224, 224) if transform == self.swin_transform else (3, 299, 299))
-                
-                img = Image.open(path).convert('RGB')
-                
-                if self.augment:
-                    # 증강 적용
-                    img = self.augment_transform(img)
-                    img = transform(img)
-                    img = self.add_gaussian_noise(img)
-                else:
-                    # 증강 없이 기본 변환만 적용
-                    img = transform(img)
-                
-                return img
-            except Exception as e:
-                print(f"Error loading {key} image at {path}: {str(e)}")
-                return torch.zeros((3, 224, 224) if transform == self.swin_transform else (3, 299, 299))
-
-        def add_gaussian_noise(self, img):
-            noise = torch.randn_like(img) * 0.02
-            return torch.clamp(img + noise, 0, 1)
-
         result = {}
         
         if self.study_type == 'face':
-            result['face'] = safe_open_image(row['face'], 'face', self.swin_transform)
+            result['face'] = self.safe_open_image(row['face'], 'face', self.swin_transform)
         else:
-            result['face'] = safe_open_image(row['face'], 'face', self.xception_transform)
+            result['face'] = self.safe_open_image(row['face'], 'face', self.xception_transform)
             if self.study_type in ['face_nose', 'face_cheeks_nose']:
-                result['nose'] = safe_open_image(row['nose'], 'nose', self.xception_transform)
+                result['nose'] = self.safe_open_image(row['nose'], 'nose', self.xception_transform)
             if self.study_type == 'face_central':
-                result['central'] = safe_open_image(row['central'], 'central', self.xception_transform)
+                result['central'] = self.safe_open_image(row['central'], 'central', self.xception_transform)
             if self.study_type == 'face_cheeks_nose':
-                result['left_cheek'] = safe_open_image(row['left_cheek'], 'left_cheek', self.xception_transform)
-                result['right_cheek'] = safe_open_image(row['right_cheek'], 'right_cheek', self.xception_transform)
+                result['left_cheek'] = self.safe_open_image(row['left_cheek'], 'left_cheek', self.xception_transform)
+                result['right_cheek'] = self.safe_open_image(row['right_cheek'], 'right_cheek', self.xception_transform)
 
         result['label'] = torch.tensor(1 if row['deepfake'] else 0, dtype=torch.long)
         
