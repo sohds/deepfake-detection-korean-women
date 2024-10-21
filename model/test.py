@@ -10,6 +10,14 @@ from tqdm import tqdm
 from model import DeepFakeDetectionModel
 from dataset import DeepFakeDataset
 from sklearn.model_selection import train_test_split
+import os
+
+def createDirectory(directory):
+    try:
+        if not os.path.exists(directory):
+            os.makedirs(directory)
+    except OSError:
+        print("Error: Failed to create the directory.")
 
 # Testing function
 def test_model(model, test_loader, study_type='face_nose'):
@@ -20,6 +28,11 @@ def test_model(model, test_loader, study_type='face_nose'):
     all_labels = []
     all_probs = []
     all_preds = []
+    
+    roc_dir = os.path.join(args.output_roc, args.saving_folder)
+    pkl_dir = os.path.join(args.output_pkl, args.saving_folder)
+    createDirectory(roc_dir)
+    createDirectory(pkl_dir)
 
     with torch.no_grad():
         for batch in tqdm(test_loader, desc="Testing [Test Set]"):
@@ -68,7 +81,7 @@ def test_model(model, test_loader, study_type='face_nose'):
     print(f"F1 Score: {f1:.4f}")
 
     # Save ROC curve data
-    with open(f'/content/drive/MyDrive/Capstone-Design/multiscaleDetect/aucPickleFiles/{args.study_type}_roc_curve_data.pkl', 'wb') as f:
+    with open(f'{pkl_dir}/{args.study_type}_roc_curve_data.pkl', 'wb') as f:
         pickle.dump({'fpr': fpr, 'tpr': tpr, 'roc_auc': roc_auc}, f)
 
     # Plot ROC curve
@@ -79,7 +92,7 @@ def test_model(model, test_loader, study_type='face_nose'):
     plt.ylabel('True Positive Rate')
     plt.title('Receiver Operating Characteristic (ROC) Curve')
     plt.legend(loc='lower right')
-    plt.savefig(f'{args.output_dir}/{args.study_type}_{epoch}epoch_roc_curve.png')
+    plt.savefig(f'{roc_dir}/{args.study_type}_{epoch}epoch_roc_curve.png')
     plt.close()
 
 # Main execution with argparse
@@ -88,7 +101,9 @@ if __name__ == "__main__":
     parser.add_argument('--csv', '-f', type=str, default='/content/drive/MyDrive/Capstone-Design/multiscaleDetect/meta_data.csv', required=True, help='Path to the CSV file containing metadata for testing')
     parser.add_argument('--checkpoint', '-c', type=str, required=True, help='Path to the trained model checkpoint')
     parser.add_argument('--study_type', '-t', type=str, choices=['face', 'face_nose', 'face_central', 'face_cheeks_nose'], required=True, help='Ablation study type to use')
-    parser.add_argument('--output_dir', '-o', type=str, default='/content/drive/MyDrive/Capstone-Design/multiscaleDetect/rocCurve', help='Directory to save output files')
+    parser.add_argument('--output_roc', '-o', type=str, default='/content/drive/MyDrive/Capstone-Design/multiscaleDetect/rocCurve', help='Directory to save roc curve plots')
+    parser.add_argument('--output_pkl', '-p', type=str, default='/content/drive/MyDrive/Capstone-Design/multiscaleDetect/aucPickleFiles', help='Directory to save roc curve pkl files')
+    parser.add_argument('--saving_folder', '-s', type=str, default='', help='new folder name - for diverse experiments')
     args = parser.parse_args()
 
     # Load dataset
