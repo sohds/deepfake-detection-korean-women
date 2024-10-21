@@ -11,11 +11,19 @@ from dataset import DeepFakeDataset
 from model import DeepFakeDetectionModel
 import os
 
+def createDirectory(directory):
+    try:
+        if not os.path.exists(directory):
+            os.makedirs(directory)
+    except OSError:
+        print("Error: Failed to create the directory.")
 
 # Training function with best checkpoint saving (including epoch and optimizer state)
 def train_model(model, train_loader, val_loader, criterion, optimizer, num_epochs=10, start_epoch=0, study_type='face_nose'):
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     model.to(device)
+    checkpoint_dir = os.path.join(args.output_dir, args.saving_folder)
+    createDirectory(checkpoint_dir)
 
     best_acc = 0.0  # Initialize best accuracy to track the best checkpoint
 
@@ -95,7 +103,7 @@ def train_model(model, train_loader, val_loader, criterion, optimizer, num_epoch
                 'optimizer_state_dict': optimizer.state_dict(),
                 'best_acc': best_acc
             }
-            torch.save(checkpoint, os.path.join(args.output_dir, f'{study_type}_best_checkpoint_{epoch+1}.pth'))
+            torch.save(checkpoint, os.path.join(checkpoint_dir, f'{study_type}_best_checkpoint_{epoch+1}.pth'))
             print(f"New best model saved with accuracy: {best_acc:.4f}, Epoch: {epoch+1}")
         
         elif val_acc == best_acc:
@@ -109,16 +117,23 @@ def train_model(model, train_loader, val_loader, criterion, optimizer, num_epoch
                     'optimizer_state_dict': optimizer.state_dict(),
                     'best_acc': best_acc
                 }
-                torch.save(checkpoint, os.path.join(args.output_dir, f'{study_type}_best_checkpoint_{epoch+1}.pth'))
+                torch.save(checkpoint, os.path.join(checkpoint_dir, f'{study_type}_best_checkpoint_{epoch+1}.pth'))
                 print(f"New best model saved with accuracy: {best_acc:.4f}, Epoch: {epoch+1}")
             
     print(f"Training complete. Best accuracy: {best_acc:.4f}")
 
 # Loading the model from checkpoint for additional training
 def load_checkpoint(model, optimizer, filename):
-    checkpoint = torch.load(filename)
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    checkpoint = torch.load(filename, map_location=device)
     model.load_state_dict(checkpoint['model_state_dict'])
+    model.to(device)  # 모델을 명시적으로 올바른 디바이스로 이동
     optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
+    # 옵티마이저의 상태를 올바른 디바이스로 이동
+    for state in optimizer.state.values():
+        for k, v in state.items():
+            if isinstance(v, torch.Tensor):
+                state[k] = v.to(device)
     start_epoch = checkpoint['epoch'] + 1
     best_acc = checkpoint['best_acc']
     print(f"Loaded checkpoint from epoch {start_epoch}, with best accuracy: {best_acc:.4f}")
@@ -133,6 +148,7 @@ if __name__ == "__main__":
     parser.add_argument('--checkpoint', '-c', type=str, default='', help='checkpoint file to resume training')
     parser.add_argument('--epochs', '-e', type=int, default=10, help='Number of epochs to train')
     parser.add_argument('--output_dir', '-o', type=str, default='/content/drive/MyDrive/Capstone-Design/multiscaleDetect/checkpoints', help='Output directory to save ROC curve plots')
+    parser.add_argument('--saving_folder', '-s', type=str, default='', help='new folder name - for diverse experiments')
     args = parser.parse_args()
 
     # Load dataset and split into train, validation, and test sets
@@ -161,7 +177,9 @@ if __name__ == "__main__":
 
     # num_classes, Model, Loss, Optimizer
     num_classes = 2
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     model = DeepFakeDetectionModel(args.study_type, num_classes=num_classes)
+    model.to(device)
     criterion = nn.CrossEntropyLoss()
     optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
 
