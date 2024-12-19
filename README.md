@@ -1,7 +1,8 @@
 # deepfake-detection-korean-women
-## Grad-CAM++ 기반 딥페이크 탐지 모델의 인종별 여성 차이 분석: 한국인 여성 중심으로 
+## Grad-CAM++와 Activation Map을 활용한 한국인 여성 중심 딥페이크 탐지 특징 분석
+
 - 2024-2 서울여자대학교 데이터사이언스학과 데이터사이언스캡스톤디자인2 4조
-### Member
+### 👥 Members
 <div align="center">
 <br>
 <table>
@@ -79,7 +80,6 @@
 </div>
 *Every Member has equal contribution.
 <br>
-<br>
 
 ## 📥 Dataset
 1. <a href="https://deepbrainai-research.github.io/kodf/">KoDF: A Large-scale Korean DeepFake Detection Dataset </a>
@@ -93,6 +93,7 @@
 - 하지만, 딥페이크 피해 중 여성과 남성의 비율은 99:1이며 이 중 피해 국가는 대한민국이 약 57%로 가장 큰 피해국가로 꼽힘.
 - 딥페이크 탐지 모델별 각 인종별 및 동양 국가별 여성에 대해 어떤 부분을 중심으로 집중하는지 확인해보고자 함.
 
+<br>
 <br>
 
 ---
