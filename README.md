@@ -38,7 +38,7 @@
         <br>
         <sub>서울여대 데이터사이언스학과 3학년</sub>
         <br>
-        <sub>seoj1npark@swu.ac.kr</sub>
+        <sub>osy.seoyeon5@gmail.com</sub>
     </td>
   </tr>
   <tr>
@@ -97,4 +97,4 @@
 <br>
 
 ---
-- 2025 HCI Korea 투고, 논문 Accept README 및 코드 정리 예정
+- 2025 HCI Korea 투고, 논문 Accept 시 README 및 코드 정리 예정
