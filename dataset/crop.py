@@ -1,4 +1,3 @@
-#일본인 크롭
 import os
 import dlib
 import cv2
