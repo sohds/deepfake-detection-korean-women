@@ -8,7 +8,7 @@ def combine_and_enhance_images(base_dir, output_dir, subfolder_prefix, num_image
 
     :param base_dir: 이미지들이 저장된 기본 디렉토리 경로
     :param output_dir: 결과 이미지를 저장할 디렉토리 경로
-    :param subfolder_prefix: 각 서브폴더 이름의 접두사 (예: "deep_asian")
+    :param subfolder_prefix: 각 서브폴더 이름의 접두사 
     :param num_images: 처리할 이미지 수 (기본값 165)
     :param scaling_factor: 색상을 더 진하게 하기 위한 스케일링 팩터 (기본값 2)
     """
