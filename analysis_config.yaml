@@ -1,0 +1,24 @@
+# 기본 설정
+paths:
+  input_dir: ""  # 입력 이미지 디렉토리
+  output_dir: "outputs"  # 결과 저장 디렉토리
+  checkpoint_path: ""  # 모델 체크포인트 경로 (model_path를 checkpoint_path로 변경)
+  face_detector: ""  # dlib 얼굴 감지기 모델 경로
+
+# 모델 설정
+model:
+  device: "cuda"  # cuda 또는 cpu
+  num_classes: 2  # 클래스 수 추가
+  
+# Grad-CAM 설정
+gradcam:
+  threshold: 0.8  # 활성화 맵 임계값
+  use_color: True  # 컬러 시각화 사용 여부
+  subfolder_prefix: "gradcam"  # Grad-CAM 이미지 저장 폴더 접두사
+  scaling_factor: 2  # 합성 이미지 스케일링 팩터
+
+# 이미지 처리 설정
+processing:
+  image_size: 224  # 입력 이미지 크기
+  batch_size: 32  # 배치 크기
+  num_workers: 4  # 데이터 로딩 워커 수 
