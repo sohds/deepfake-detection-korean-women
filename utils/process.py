@@ -3,7 +3,7 @@ import csv
 import cv2
 import torch
 import torch.nn as nn
-from utils.landmark_extract import get_face_masks
+from utils.extract_landmark import extract_face_regions
 from utils.normalize import preprocess_image
 from utils.gradcam_overlay import explain, apply_cam_overlay
 from utils.evaluate import calculate_presence_binary, calculate_area_in_mask
@@ -49,7 +49,7 @@ def process_images(image_paths, model, device, detector, predictor, landmark_ind
 
             if len(faces) > 0:
                 landmarks = predictor(gray, faces[0])
-                masks = get_face_masks(image, landmarks, landmark_indices)
+                face_masks = extract_face_regions(image, landmarks, landmark_indices)
 
                 # 이미지 전처리
                 image_prep, image_var, visualize_image = preprocess_image(image)
@@ -64,7 +64,7 @@ def process_images(image_paths, model, device, detector, predictor, landmark_ind
                 row1 = [image_path]
                 row2 = [image_path]
 
-                for mask in masks:
+                for region_name, mask in face_masks.items():
                     area, mask_area = calculate_area_in_mask(salience_map, mask)
                     activation_ratio = area / mask_area * 100 if mask_area > 0 else 0
                     presence_binary = calculate_presence_binary(salience_map, mask)
