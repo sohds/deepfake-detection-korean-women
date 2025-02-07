@@ -1,84 +1,22 @@
-# deepfake-detection-korean-women
-## Grad-CAM++와 Activation Map을 활용한 한국인 여성 중심 딥페이크 탐지 특징 분석
-
-- 2024-2 서울여자대학교 데이터사이언스학과 데이터사이언스캡스톤디자인2 4조
-### 👥 Members
+## HCI KOREA 2025 Paper Code
 <div align="center">
+<h3>Grad-CAM++와 Activation Map을 활용한 한국인 여성 중심 딥페이크 탐지 특징 분석</h3>
+<h4>Analysis of Deepfake Detection Characteristics Focusing on Korean Women
+Using Grad-CAM++ and Activation Map</h4>
+
+[Kyuri Kim](https://github.com/kyuriya)<sup>1</sup>
+, [Sein Kim](https://github.com/seiinkiim)<sup>1</sup>
+, [Seoyeon Oh](https://github.com/sohds)<sup>1</sup>
+, [Yura Cho](https://github.com/stxllaaa)<sup>1</sup>
+, [Daye Choi](https://github.com/Choi-Daye)<sup>1</sup>
+, [Dukwoo Choi](https://github.com/ejrdn)<sup>1</sup>
+, and [Yerim Choi](https://sites.google.com/view/imlab-swu/yerim-choi?authuser=0) <sup>1&dagger;*</sup>
 <br>
-<table>
-  <tr>
-    <td align="center">
-      <a href="https://github.com/kyuriya">
-        <img src="./readme_photos/profile/kyuriya.png" width="200px;" alt=""/>
-        <br />
-        <sub>김규리</sub>
-      </a>
-        <br>
-        <sub>서울여대 데이터사이언스학과 4학년</sub>
-        <br>
-        <sub>kyureekim@swu.ac.kr</sub>
-    </td>
-    <td align="center">
-      <a href="https://github.com/seiinkiim">
-        <img src="./readme_photos/profile/seiinkiim.png" width="200px;" alt=""/>
-        <br />
-        <sub>김세인</sub>
-      </a>
-        <br>
-        <sub>서울여대 데이터사이언스학과 4학년</sub>
-        <br>
-        <sub>ssen3174@swu.ac.kr</sub>
-    </td>
-    <td align="center">
-      <a href="https://github.com/sohds">
-        <img src="./readme_photos/profile/sohds.png" width="200px;" alt=""/>
-        <br />
-        <sub>오서연</sub>
-      </a>
-        <br>
-        <sub>서울여대 데이터사이언스학과 3학년</sub>
-        <br>
-        <sub>osy.seoyeon5@gmail.com</sub>
-    </td>
-  </tr>
-  <tr>
-    <td align="center">
-      <a href="https://github.com/stxllaaa">
-        <img src="./readme_photos/profile/stxllaaa.png" width="200px;" alt=""/>
-        <br />
-        <sub>조유라</sub>
-      </a>
-        <br>
-        <sub>서울여대 데이터사이언스학과 4학년</sub>
-        <br>
-        <sub>stxllaaa03@gmail.com</sub>
-    </td>
-    <td align="center">
-      <a href="https://github.com/Choi-Daye">
-        <img src="./readme_photos/profile/Choi-Daye.png" width="200px;" alt=""/>
-        <br />
-        <sub>최다예</sub>
-      </a>
-        <br>
-        <sub>서울여대 데이터사이언스학과 4학년</sub>
-        <br>
-        <sub>allyes1227@swu.ac.kr</sub>
-    </td>
-    <td align="center">
-      <a href="https://github.com/ejrdn">
-        <img src="./readme_photos/profile/ejrdn.png" width="200px;" alt=""/>
-        <br />
-        <sub>최덕우</sub>
-      </a>
-        <br>
-        <sub>서울여대 데이터사이언스학과 4학년</sub>
-        <br>
-        <sub>ejrdn1019@swu.ac.kr</sub>
-    </td>
-  </tr>
-</table>
+<sup>1</sup>Seoul Women's University<br>
+<span style="color: gray;">every member has equal contribution</span>
+<br>
+<img src="readme_photos/HCI_포스터_깃허브용.png" width="500">
 </div>
-*Every Member has equal contribution.
 <br>
 
 ## 📥 Dataset
@@ -87,14 +25,54 @@
 3. <a href="https://ieeexplore.ieee.org/document/4404053">The CAS-PEAL large-scale Chinese face database and baseline evaluations</a>
 4. <a href="https://paperswithcode.com/dataset/jaffe">The Japanese Female Facial Expression (JAFFE) Dataset</a>
 
+<br>
+
+## 📝 Setting
+```python
+# Clone the repository
+git clone https://github.com/sohds/deepfake-detection-korean-women.git
+
+# Install dependencies
+pip install -r requirements.txt
+
+# Run the experiment
+python experiment.py
+```
+<br>
+
 ## 💡 Research Goal
-- 딥페이크 탐지에 있어서, 인종별 정확도와 성별별로의 정확도 차이가 확연히 존재함.
-  - 특히, 아시안과 여성이 있어서 탐지 정확도가 다른 비교군에 비교해 낮음을 확인함.
-- 하지만, 딥페이크 피해 중 여성과 남성의 비율은 99:1이며 이 중 피해 국가는 대한민국이 약 57%로 가장 큰 피해국가로 꼽힘.
-- 딥페이크 탐지 모델별 각 인종별 및 동양 국가별 여성에 대해 어떤 부분을 중심으로 집중하는지 확인해보고자 함.
+- There are significant differences in detection accuracy across races and genders in deepfake detection.
+  - In particular, detection accuracy is notably lower for Asians and women compared to other groups.
+- However, the ratio of deepfake victims between women and men is 99:1, with South Korea being the most affected country accounting for about 57% of victims.
+- We aim to examine which facial regions different deepfake detection models focus on when analyzing women across races and East Asian nationalities.
 
 <br>
-<br>
 
----
-- 2025 HCI Korea 투고, 논문 Accept 시 README 및 코드 정리 예정
+## 📚 References
+1. Collins, B. G., & Zimmer, Z. E. (2019). Deepfakes and digital disinformation: The new weapon in the cyber warfare arsenal. *Journal of Cyber Policy, 4*(3), 378-396.
+
+2. 경찰청. (2024). 딥페이크 탐지 소프트웨어 개발. [보도자료](https://www.police.go.kr/user/bbs/BD_selectBbs.do?q_bbsCode=1002&q_bbscttSn=20240305110859800)
+
+3. Security Hero. (2024). [State of Deepfakes](https://www.securityhero.io/state-ofdeepfakes/#key-findings)
+
+4. 김영희, & 박철수. (2023). 딥페이크 탐지 기술의 현황과 발전 방향. *정보보호학회논문지, 33*(2), 45-60.
+
+5. Trinh, L., & Liu, Y. (2021). An examination of fairness of AI models for deepfake detection. *arXiv preprint arXiv:2105.00558*.
+
+6. Xu, Y., Terhöst, P., Pedersen, M., & Raja, K. (2024). Analyzing fairness in deepfake detection with massively annotated databases. *IEEE Transactions on Technology and Society*.
+
+7. Nadimpalli, A. V., & Rattani, A. (2022). GBDF: gender balanced deepfake dataset towards fair deepfake detection. In *Proceedings of the International Conference on Pattern Recognition* (pp. 320-337). Springer Nature Switzerland.
+
+8. 박진수, & 김민수. (2024). 딥페이크 탐지 기술의 최근 동향. *한국정보과학회지, 41*(3), 123-135.
+
+9. Sun, Z., Han, Y., Hua, Z., Ruan, N., & Jia, W. (2021). Improving the efficiency and robustness of deepfakes detection through precise geometric features. In *Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition* (pp. 3609-3618).
+
+10. Jiang, L., Li, R., Wu, W., Qian, C., & Loy, C. C. (2020). Deeperforensics-1.0: A large-scale dataset for real-world face forgery detection. In *Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition* (pp. 2889-2898).
+
+11. Gao, W., Cao, B., Shan, S., Chen, X., Zhou, D., Zhang, X., & Zhao, D. (2007). The CAS-PEAL large-scale Chinese face database and baseline evaluations. *IEEE Transactions on Systems, Man, and Cybernetics-Part A: Systems and Humans, 38*(1), 149-161.
+
+12. Lyons, M., Kamachi, M., & Gyoba, J. (1998). [The Japanese Female Facial Expression (JAFFE) Dataset](https://doi.org/10.5281/zenodo.3451524). Zenodo.
+
+13. Kwon, P., You, J., Nam, G., Park, S., & Chae, G. (2021). Kodf: A large-scale korean deepfake detection dataset. In *Proceedings of the IEEE/CVF International Conference on Computer Vision* (pp. 10744-10753).
+
+14. Chattopadhay, A., Sarkar, A., Howlader, P., & Balasubramanian, V. N. (2018). Grad-cam++: Generalized gradient-based visual explanations for deep convolutional networks. In *2018 IEEE Winter Conference on Applications of Computer Vision (WACV)* (pp. 839-847).
