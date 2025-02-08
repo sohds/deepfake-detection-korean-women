@@ -9,15 +9,6 @@ from utils.gradcam_overlay import explain, apply_cam_overlay
 from utils.evaluate import calculate_presence_binary, calculate_area_in_mask
 from matplotlib import pyplot as plt
 
-def load_model(model_path, device):
-    checkpoint = torch.load(model_path)
-    model = checkpoint['model']
-    model.load_state_dict(checkpoint['model_state_dict'])
-    num_ftrs = model.fc.in_features
-    model.fc = nn.Linear(num_ftrs, 2).to(device)
-    model.eval()
-    return model
-
 def save_gradcam_image(visualization, image_path, output_dir):
     # 원본 이미지의 폴더 및 파일명 추출
     folder_name = os.path.basename(os.path.dirname(image_path))
