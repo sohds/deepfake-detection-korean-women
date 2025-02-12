@@ -72,7 +72,9 @@ python experiment.py
 <br>
 
 ## 📝 Poster
-<img src="readme_photos/HCI_포스터_깃허브용.png" width="700">
+<div align="center">
+<img src="readme_photos/HCI_포스터_깃허브용.png" width="800">
+</div>
 
 
 
