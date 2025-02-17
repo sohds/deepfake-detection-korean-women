@@ -80,7 +80,6 @@ python experiment.py
 
 ## 📚 References
 [1] Collins, B. G., & Zimmer, Z. E. (2019). Deepfakes and digital disinformation: The new weapon in the cyber warfare arsenal. *Journal of Cyber Policy, 4*(3), 378-396.<br>
-
 [2] 경찰청. (2024). 딥페이크 탐지 소프트웨어 개발. [보도자료](https://www.police.go.kr/user/bbs/BD_selectBbs.do?q_bbsCode=1002&q_bbscttSn=20240305110859800)<br>
 [3] Security Hero. (2024). [State of Deepfakes](https://www.securityhero.io/state-ofdeepfakes/#key-findings)<br>
 [4] 김영희, & 박철수. (2023). 딥페이크 탐지 기술의 현황과 발전 방향. *정보보호학회논문지, 33*(2), 45-60.<br>
