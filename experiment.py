@@ -142,7 +142,7 @@ def main():
         "right_eye": range(42, 48),
         "nose": range(27, 36),
         "mouth": range(48, 68),
-        "chin": range(0, 17),
+        "chin": [5, 6, 7, 8, 9, 10, 11, 54, 55, 56, 57, 58, 59, 48],
         "left_cheek": [0, 1, 2, 3, 4, 31, 32, 33],
         "right_cheek": [12, 13, 14, 15, 16, 33, 34, 35]
     }
