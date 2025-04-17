@@ -15,7 +15,7 @@ Using Grad-CAM++ and Activation Map</h4>
 <sup>1</sup>Seoul Women's University<br>
 <span style="color: gray;">every member has equal contribution</span>
 <br>
-[[Paper]](https://conference.hcikorea.org/hcik2025/main/main.asp) [[Code]](https://github.com/sohds/deepfake-detection-korean-women)<br>
+[[Paper]](https://www.dbpia.co.kr/journal/articleDetail?nodeId=NODE12131642) [[Code]](https://github.com/sohds/deepfake-detection-korean-women)<br>
 <br>
 <img src="readme_photos/process.png" width="500"><br>
 <span style="color: gray;">Experiment Flow</span>
